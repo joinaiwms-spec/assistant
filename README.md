@@ -35,10 +35,10 @@ A modular, intelligent backend platform for developers and power users, inspired
 
 ### 🌐 Multiple LLM Support
 - **OpenRouter Integration**: Access to multiple AI models via single API
-- **Free Models**: DeepSeek Chat V3, Mistral Small 3.2 24B, Qwen3 Coder - all free tier
-- **Vision Capabilities**: Mistral Small supports image analysis and multimodal tasks
+- **Advanced Models**: OpenRouter Horizon Beta (default with vision), Mistral Small 3.2 24B, Qwen3 Coder
+- **Vision Capabilities**: Horizon Beta and Mistral Small support image analysis and multimodal tasks
 - **Smart Model Selection**: Automatic routing based on task type (coding, vision, general)
-- **Cost Optimization**: Using free models for maximum value
+- **Optimized Performance**: Using high-quality models for best results
 
 ## 🚀 Quick Start
 
@@ -180,7 +180,7 @@ User Request → AssistantAgent → Task Analysis → Agent Selection → Task E
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `OPENROUTER_API_KEY` | OpenRouter API key | Required |
-| `DEFAULT_MODEL` | Default chat model | `deepseek/deepseek-chat-v3-0324:free` |
+| `DEFAULT_MODEL` | Default chat model | `openrouter/horizon-beta` |
 | `MISTRAL_MODEL` | Mistral model for vision tasks | `mistralai/mistral-small-3.2-24b-instruct:free` |
 | `QWEN_MODEL` | Qwen model for coding tasks | `qwen/qwen3-coder:free` |
 | `DATABASE_URL` | SQLite database path | `sqlite:///./ai_assistant.db` |
@@ -191,11 +191,11 @@ User Request → AssistantAgent → Task Analysis → Agent Selection → Task E
 ### Model Configuration
 
 The system automatically selects the best model for each task:
-- **Vision tasks** → Mistral Small 3.2 24B (supports image analysis)
+- **Vision tasks** → OpenRouter Horizon Beta (advanced multimodal capabilities)
 - **Code tasks** → Qwen3 Coder (specialized for programming)
-- **General tasks** → DeepSeek Chat V3 (excellent for conversation and reasoning)
+- **General tasks** → OpenRouter Horizon Beta (excellent for conversation and reasoning)
 
-All models are free tier on OpenRouter, providing excellent capabilities at no cost.
+Horizon Beta serves as the primary model with advanced vision and reasoning capabilities.
 
 ## 🧪 Usage Examples
 

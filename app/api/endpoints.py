@@ -145,7 +145,7 @@ async def chat(request: ChatRequest):
                     context=f"Conversation ID: {conversation_id}"
                 )
             
-            model_used = "mistralai/mistral-small-3.2-24b-instruct:free (Vision)"
+            model_used = "openrouter/horizon-beta (Vision)"
         else:
             # Regular text-only chat
             response = await assistant_agent.chat(
@@ -534,7 +534,7 @@ async def analyze_image(
             "image_url": image_url,
             "prompt": prompt,
             "processing_time": processing_time,
-            "model_used": "mistralai/mistral-small-3.2-24b-instruct:free"
+            "model_used": "openrouter/horizon-beta"
         }
         
     except Exception as e:
@@ -566,7 +566,7 @@ async def compare_images(
             "image_urls": image_urls,
             "prompt": prompt,
             "processing_time": processing_time,
-            "model_used": "mistralai/mistral-small-3.2-24b-instruct:free"
+            "model_used": "openrouter/horizon-beta"
         }
         
     except Exception as e:
@@ -588,7 +588,7 @@ async def extract_text_from_image(image_url: str):
             "result": result,
             "image_url": image_url,
             "processing_time": processing_time,
-            "model_used": "mistralai/mistral-small-3.2-24b-instruct:free"
+            "model_used": "openrouter/horizon-beta"
         }
         
     except Exception as e:
@@ -610,7 +610,7 @@ async def analyze_chart(image_url: str):
             "result": result,
             "image_url": image_url,
             "processing_time": processing_time,
-            "model_used": "mistralai/mistral-small-3.2-24b-instruct:free"
+            "model_used": "openrouter/horizon-beta"
         }
         
     except Exception as e:

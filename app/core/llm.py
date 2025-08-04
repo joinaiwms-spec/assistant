@@ -203,7 +203,7 @@ class LLMManager:
     def __init__(self):
         self.client = OpenRouterClient()
         self._model_capabilities = {
-            ModelType.DEFAULT: {"good_for": ["general", "chat", "reasoning", "conversation"], "model": "DeepSeek Chat V3"},
+            ModelType.DEFAULT: {"good_for": ["general", "chat", "reasoning", "conversation", "vision", "multimodal"], "model": "OpenRouter Horizon Beta"},
             ModelType.MISTRAL: {"good_for": ["vision", "image_analysis", "multimodal", "visual_tasks"], "model": "Mistral Small 3.2 24B"},
             ModelType.QWEN: {"good_for": ["code", "programming", "technical", "debugging", "algorithms"], "model": "Qwen3 Coder"},
         }
@@ -214,13 +214,14 @@ class LLMManager:
         task_lower = task_type.lower()
         context_lower = context.lower()
         
-        # Check if task involves images/vision (Mistral Small has vision capabilities)
-        if any(keyword in task_lower or keyword in context_lower for keyword in ["image", "picture", "photo", "visual", "vision", "analyze image"]):
-            return ModelType.MISTRAL  # Mistral Small supports vision
-        elif any(keyword in task_lower for keyword in ["code", "programming", "debug", "technical", "function", "algorithm"]):
+        # Prioritize specialized models for specific tasks
+        if any(keyword in task_lower for keyword in ["code", "programming", "debug", "technical", "function", "algorithm"]):
             return ModelType.QWEN  # Qwen3 Coder is specialized for coding
+        elif any(keyword in task_lower or keyword in context_lower for keyword in ["image", "picture", "photo", "visual", "vision", "analyze image"]):
+            # Both DEFAULT (Horizon Beta) and MISTRAL support vision, prefer DEFAULT for general use
+            return ModelType.DEFAULT  # Horizon Beta supports vision and is more general
         else:
-            return ModelType.DEFAULT  # DeepSeek Chat for general tasks
+            return ModelType.DEFAULT  # Horizon Beta for general tasks
     
     async def generate_response(
         self,

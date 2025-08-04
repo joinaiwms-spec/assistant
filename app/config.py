@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     openrouter_base_url: str = Field("https://openrouter.ai/api/v1", env="OPENROUTER_BASE_URL")
     
     # Model Configuration
-    default_model: str = Field("deepseek/deepseek-chat-v3-0324:free", env="DEFAULT_MODEL")
+    default_model: str = Field("openrouter/horizon-beta", env="DEFAULT_MODEL")
     mistral_model: str = Field("mistralai/mistral-small-3.2-24b-instruct:free", env="MISTRAL_MODEL")
     qwen_model: str = Field("qwen/qwen3-coder:free", env="QWEN_MODEL")
     

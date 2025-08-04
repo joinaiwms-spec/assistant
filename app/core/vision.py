@@ -10,7 +10,7 @@ class VisionProcessor:
     """Process images and generate descriptions using vision-capable models."""
     
     def __init__(self):
-        self.vision_model = ModelType.MISTRAL  # Mistral Small has vision capabilities
+        self.vision_model = ModelType.DEFAULT  # Horizon Beta has excellent vision capabilities
     
     async def analyze_image(
         self, 
@@ -159,8 +159,8 @@ class VisionProcessor:
     
     def is_vision_supported(self, model_type: ModelType) -> bool:
         """Check if a model supports vision capabilities."""
-        # Currently only Mistral Small supports vision
-        return model_type == ModelType.MISTRAL
+        # Both DEFAULT (Horizon Beta) and MISTRAL support vision
+        return model_type in [ModelType.DEFAULT, ModelType.MISTRAL]
     
     async def extract_text_from_image(self, image_url: str) -> str:
         """Extract text from an image (OCR functionality)."""
