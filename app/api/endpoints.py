@@ -346,61 +346,42 @@ async def get_agent_status(agent_name: str):
 async def generate_project(request: ProjectGenerationRequest, background_tasks: BackgroundTasks):
     """Generate a complete project based on requirements."""
     start_time = time.time()
-    project_id = str(uuid.uuid4())
     
     try:
-        # Create project generation task for the assistant agent
-        task_description = f"""
-        Generate a complete {request.project_type} project with the following specifications:
+        from app.core.project_generator import project_generator
         
-        Name: {request.name}
-        Description: {request.description}
-        Requirements: {', '.join(request.requirements)}
-        Technologies: {', '.join(request.technologies)}
-        
-        Create a full project structure with all necessary files, documentation, and configuration.
-        """
-        
-        task_id = await assistant_agent.add_task(
-            description=task_description,
-            context={
-                "project_type": request.project_type,
-                "project_name": request.name,
-                "requirements": request.requirements,
-                "technologies": request.technologies,
-                "additional_context": request.additional_context,
-                "project_id": project_id
-            }
+        # Generate project using the dedicated project generator
+        project_info = await project_generator.generate_project(
+            project_type=request.project_type,
+            name=request.name,
+            description=request.description,
+            requirements=request.requirements,
+            technologies=request.technologies,
+            additional_context=request.additional_context
         )
         
-        # Execute the project generation task
-        task_result = await assistant_agent.execute_task(task_id)
         processing_time = time.time() - start_time
         
-        if task_result.status.value == "completed":
+        if project_info.get("status") == "completed":
             # Store project info
-            generated_projects[project_id] = {
-                "name": request.name,
-                "type": request.project_type,
-                "created_at": time.time(),
-                "task_result": task_result.result
-            }
+            generated_projects[project_info["project_id"]] = project_info
             
             return ProjectGenerationResponse(
-                project_id=project_id,
+                project_id=project_info["project_id"],
                 status="completed",
-                files_created=0,  # Would count actual files
-                project_path="",  # Would be actual path
+                files_created=project_info["files_created"],
+                project_path=project_info["path"],
+                download_url=f"/projects/{project_info['project_id']}/download",
                 processing_time=processing_time
             )
         else:
             return ProjectGenerationResponse(
-                project_id=project_id,
+                project_id=project_info.get("project_id", "unknown"),
                 status="failed",
                 files_created=0,
                 project_path="",
                 processing_time=processing_time,
-                error=task_result.error
+                error=project_info.get("error", "Unknown error")
             )
             
     except Exception as e:
@@ -423,9 +404,17 @@ async def download_project(project_id: str):
     if project_id not in generated_projects:
         raise HTTPException(status_code=404, detail="Project not found")
     
-    # This would create and return the actual zip file
-    # For now, return a placeholder response
-    raise HTTPException(status_code=501, detail="Project download not yet implemented")
+    project_info = generated_projects[project_id]
+    zip_path = project_info.get("zip_path")
+    
+    if not zip_path or not Path(zip_path).exists():
+        raise HTTPException(status_code=404, detail="Project file not found")
+    
+    return FileResponse(
+        path=zip_path,
+        filename=f"{project_info['name']}.zip",
+        media_type="application/zip"
+    )
 
 
 # Memory endpoints
