@@ -18,6 +18,7 @@ from rich.syntax import Syntax
 from app.config import settings
 from app.core.memory import memory
 from app.core.document_processor import document_processor
+from app.core.vision import vision_processor
 from app.agents.assistant import AssistantAgent
 from app.agents.code_agent import CodeAgent
 from app.agents.docs_agent import DocsAgent
@@ -500,6 +501,147 @@ async def _execute_agent_task(agent_name: str, task_description: str):
             
     except Exception as e:
         console.print(f"❌ Execution error: {e}", style="red")
+
+
+@app.command()
+def vision(
+    action: str = typer.Argument(..., help="Action: analyze, compare, extract-text, analyze-chart"),
+    image_url: Optional[str] = typer.Argument(None, help="Image URL to analyze"),
+    prompt: Optional[str] = typer.Option("What is in this image?", "--prompt", "-p", help="Analysis prompt"),
+    image_urls: Optional[str] = typer.Option(None, "--images", help="Comma-separated image URLs for comparison"),
+):
+    """Analyze images using vision capabilities."""
+    if action == "analyze":
+        if not image_url:
+            console.print("❌ Image URL required for analysis", style="red")
+            return
+        
+        asyncio.run(_analyze_image(image_url, prompt))
+    
+    elif action == "compare":
+        if not image_urls:
+            console.print("❌ Multiple image URLs required for comparison", style="red")
+            console.print("   Use --images 'url1,url2,url3'", style="yellow")
+            return
+        
+        urls = [url.strip() for url in image_urls.split(",")]
+        if len(urls) < 2:
+            console.print("❌ At least two image URLs required", style="red")
+            return
+        
+        asyncio.run(_compare_images(urls, prompt))
+    
+    elif action == "extract-text":
+        if not image_url:
+            console.print("❌ Image URL required for text extraction", style="red")
+            return
+        
+        asyncio.run(_extract_text_from_image(image_url))
+    
+    elif action == "analyze-chart":
+        if not image_url:
+            console.print("❌ Image URL required for chart analysis", style="red")
+            return
+        
+        asyncio.run(_analyze_chart(image_url))
+    
+    else:
+        console.print(f"❌ Unknown action: {action}", style="red")
+        console.print("Available actions: analyze, compare, extract-text, analyze-chart")
+
+
+async def _analyze_image(image_url: str, prompt: str):
+    """Analyze a single image."""
+    console.print(f"🖼️  Analyzing image: {image_url}", style="bold blue")
+    console.print(f"Prompt: {prompt}")
+    
+    try:
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            transient=True,
+        ) as progress:
+            task = progress.add_task("Analyzing image...", total=None)
+            
+            result = await vision_processor.analyze_image(image_url, prompt)
+            
+            progress.remove_task(task)
+        
+        console.print("\n[bold green]Analysis Result:[/bold green]")
+        console.print(result)
+        
+    except Exception as e:
+        console.print(f"❌ Analysis error: {e}", style="red")
+
+
+async def _compare_images(image_urls: List[str], prompt: str):
+    """Compare multiple images."""
+    console.print(f"🖼️  Comparing {len(image_urls)} images", style="bold blue")
+    console.print(f"Prompt: {prompt}")
+    
+    try:
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            transient=True,
+        ) as progress:
+            task = progress.add_task("Comparing images...", total=None)
+            
+            result = await vision_processor.compare_images(image_urls, prompt)
+            
+            progress.remove_task(task)
+        
+        console.print("\n[bold green]Comparison Result:[/bold green]")
+        console.print(result)
+        
+    except Exception as e:
+        console.print(f"❌ Comparison error: {e}", style="red")
+
+
+async def _extract_text_from_image(image_url: str):
+    """Extract text from an image."""
+    console.print(f"📝 Extracting text from: {image_url}", style="bold blue")
+    
+    try:
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            transient=True,
+        ) as progress:
+            task = progress.add_task("Extracting text...", total=None)
+            
+            result = await vision_processor.extract_text_from_image(image_url)
+            
+            progress.remove_task(task)
+        
+        console.print("\n[bold green]Extracted Text:[/bold green]")
+        console.print(result)
+        
+    except Exception as e:
+        console.print(f"❌ Text extraction error: {e}", style="red")
+
+
+async def _analyze_chart(image_url: str):
+    """Analyze a chart or graph."""
+    console.print(f"📊 Analyzing chart: {image_url}", style="bold blue")
+    
+    try:
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            transient=True,
+        ) as progress:
+            task = progress.add_task("Analyzing chart...", total=None)
+            
+            result = await vision_processor.analyze_chart_or_graph(image_url)
+            
+            progress.remove_task(task)
+        
+        console.print("\n[bold green]Chart Analysis:[/bold green]")
+        console.print(result)
+        
+    except Exception as e:
+        console.print(f"❌ Chart analysis error: {e}", style="red")
 
 
 @app.command()

@@ -22,6 +22,7 @@ from app.agents.tool_agent import ToolAgent
 from app.core.document_processor import document_processor
 from app.core.memory import memory
 from app.core.llm import llm_manager
+from app.core.vision import vision_processor
 
 
 # Initialize FastAPI app
@@ -119,30 +120,51 @@ async def system_status():
 # Chat endpoints
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
-    """Handle chat requests."""
+    """Handle chat requests with optional vision support."""
     start_time = time.time()
     
     try:
         # Handle conversation context
         conversation_id = request.conversation_id or int(time.time())
         
-        # Process the chat message
-        response = await assistant_agent.chat(
-            message=request.message,
-            context={
-                "conversation_id": conversation_id,
-                "model_type": request.model_type,
-                **request.context
-            }
-        )
+        # Check if this is a vision request
+        if request.images:
+            logger.info(f"Processing vision request with {len(request.images)} images")
+            
+            # Use vision processor for image analysis
+            if len(request.images) == 1:
+                response = await vision_processor.analyze_image(
+                    image_url=request.images[0],
+                    prompt=request.message,
+                    context=f"Conversation ID: {conversation_id}"
+                )
+            else:
+                response = await vision_processor.analyze_multiple_images(
+                    image_urls=request.images,
+                    prompt=request.message,
+                    context=f"Conversation ID: {conversation_id}"
+                )
+            
+            model_used = "mistralai/mistral-small-3.2-24b-instruct:free (Vision)"
+        else:
+            # Regular text-only chat
+            response = await assistant_agent.chat(
+                message=request.message,
+                context={
+                    "conversation_id": conversation_id,
+                    "model_type": request.model_type,
+                    **request.context
+                }
+            )
+            model_used = "auto-selected"
         
         processing_time = time.time() - start_time
         
         return ChatResponse(
             response=response,
             conversation_id=conversation_id,
-            model_used="auto-selected",  # Would track actual model used
-            agent_used="AssistantAgent",
+            model_used=model_used,
+            agent_used="VisionProcessor" if request.images else "AssistantAgent",
             processing_time=processing_time
         )
         
@@ -486,6 +508,114 @@ async def get_conversation(conversation_id: int):
         raise HTTPException(status_code=404, detail="Conversation not found")
     
     return active_conversations[conversation_id]
+
+
+# Vision endpoints
+@app.post("/vision/analyze")
+async def analyze_image(
+    image_url: str,
+    prompt: str = "What is in this image?",
+    context: Optional[str] = None
+):
+    """Analyze a single image using vision capabilities."""
+    start_time = time.time()
+    
+    try:
+        result = await vision_processor.analyze_image(
+            image_url=image_url,
+            prompt=prompt,
+            context=context
+        )
+        
+        processing_time = time.time() - start_time
+        
+        return {
+            "result": result,
+            "image_url": image_url,
+            "prompt": prompt,
+            "processing_time": processing_time,
+            "model_used": "mistralai/mistral-small-3.2-24b-instruct:free"
+        }
+        
+    except Exception as e:
+        logger.error(f"Vision analysis error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/vision/compare")
+async def compare_images(
+    image_urls: List[str],
+    prompt: str = "Compare these images and describe the differences and similarities."
+):
+    """Compare multiple images."""
+    start_time = time.time()
+    
+    try:
+        if len(image_urls) < 2:
+            raise HTTPException(status_code=400, detail="At least two images required for comparison")
+        
+        result = await vision_processor.compare_images(
+            image_urls=image_urls,
+            comparison_prompt=prompt
+        )
+        
+        processing_time = time.time() - start_time
+        
+        return {
+            "result": result,
+            "image_urls": image_urls,
+            "prompt": prompt,
+            "processing_time": processing_time,
+            "model_used": "mistralai/mistral-small-3.2-24b-instruct:free"
+        }
+        
+    except Exception as e:
+        logger.error(f"Vision comparison error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/vision/extract-text")
+async def extract_text_from_image(image_url: str):
+    """Extract text from an image (OCR)."""
+    start_time = time.time()
+    
+    try:
+        result = await vision_processor.extract_text_from_image(image_url)
+        
+        processing_time = time.time() - start_time
+        
+        return {
+            "result": result,
+            "image_url": image_url,
+            "processing_time": processing_time,
+            "model_used": "mistralai/mistral-small-3.2-24b-instruct:free"
+        }
+        
+    except Exception as e:
+        logger.error(f"Text extraction error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/vision/analyze-chart")
+async def analyze_chart(image_url: str):
+    """Analyze charts, graphs, or data visualizations."""
+    start_time = time.time()
+    
+    try:
+        result = await vision_processor.analyze_chart_or_graph(image_url)
+        
+        processing_time = time.time() - start_time
+        
+        return {
+            "result": result,
+            "image_url": image_url,
+            "processing_time": processing_time,
+            "model_used": "mistralai/mistral-small-3.2-24b-instruct:free"
+        }
+        
+    except Exception as e:
+        logger.error(f"Chart analysis error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # Tool and utility endpoints

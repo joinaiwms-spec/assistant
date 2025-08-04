@@ -1,10 +1,12 @@
 """LLM integration with OpenRouter for multiple model support."""
 
 import asyncio
-from typing import Dict, List, Any, Optional, AsyncGenerator
+import json
+from typing import Dict, List, Any, Optional, AsyncGenerator, Union
 from enum import Enum
 
 import httpx
+import requests
 from loguru import logger
 from pydantic import BaseModel
 
@@ -21,7 +23,7 @@ class ModelType(str, Enum):
 class ChatMessage(BaseModel):
     """Chat message model."""
     role: str
-    content: str
+    content: Any  # Can be string or list for multimodal content
     name: Optional[str] = None
 
 
@@ -44,14 +46,15 @@ class OpenRouterClient:
             ModelType.MISTRAL: settings.mistral_model,
             ModelType.QWEN: settings.qwen_model,
         }
+        self.headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "http://localhost:8000",  # Optional. Site URL for rankings
+            "X-Title": "AI Assistant System",  # Optional. Site title for rankings
+        }
         self.client = httpx.AsyncClient(
             timeout=httpx.Timeout(60.0),
-            headers={
-                "Authorization": f"Bearer {self.api_key}",
-                "HTTP-Referer": "http://localhost:8000",
-                "X-Title": "AI Assistant System",
-                "Content-Type": "application/json"
-            }
+            headers=self.headers
         )
     
     async def chat_completion(
@@ -63,13 +66,29 @@ class OpenRouterClient:
         stream: bool = False,
         **kwargs
     ) -> LLMResponse:
-        """Generate chat completion."""
+        """Generate chat completion using OpenRouter API."""
         try:
             model = self.models[model_type]
             
+            # Convert messages to the format expected by OpenRouter
+            formatted_messages = []
+            for msg in messages:
+                message_dict = {"role": msg.role}
+                
+                # Handle multimodal content (text + images)
+                if isinstance(msg.content, list):
+                    message_dict["content"] = msg.content
+                else:
+                    message_dict["content"] = msg.content
+                
+                if msg.name:
+                    message_dict["name"] = msg.name
+                    
+                formatted_messages.append(message_dict)
+            
             payload = {
                 "model": model,
-                "messages": [msg.dict(exclude_none=True) for msg in messages],
+                "messages": formatted_messages,
                 "temperature": temperature,
                 "max_tokens": max_tokens,
                 "stream": stream,
@@ -78,6 +97,7 @@ class OpenRouterClient:
             
             logger.debug(f"Sending request to {model} with {len(messages)} messages")
             
+            # Use the exact format from your OpenRouter example
             response = await self.client.post(
                 f"{self.base_url}/chat/completions",
                 json=payload
@@ -183,22 +203,24 @@ class LLMManager:
     def __init__(self):
         self.client = OpenRouterClient()
         self._model_capabilities = {
-            ModelType.DEFAULT: {"good_for": ["general", "chat", "reasoning"]},
-            ModelType.MISTRAL: {"good_for": ["code", "technical", "analysis"]},
-            ModelType.QWEN: {"good_for": ["multilingual", "creative", "writing"]},
+            ModelType.DEFAULT: {"good_for": ["general", "chat", "reasoning", "conversation"], "model": "DeepSeek Chat V3"},
+            ModelType.MISTRAL: {"good_for": ["vision", "image_analysis", "multimodal", "visual_tasks"], "model": "Mistral Small 3.2 24B"},
+            ModelType.QWEN: {"good_for": ["code", "programming", "technical", "debugging", "algorithms"], "model": "Qwen3 Coder"},
         }
     
     def select_best_model(self, task_type: str, context: str = "") -> ModelType:
         """Select the best model for a given task type."""
-        # Simple heuristic-based model selection
+        # Updated model selection for the new models
         task_lower = task_type.lower()
+        context_lower = context.lower()
         
-        if any(keyword in task_lower for keyword in ["code", "programming", "debug", "technical"]):
-            return ModelType.MISTRAL
-        elif any(keyword in task_lower for keyword in ["creative", "write", "story", "translate"]):
-            return ModelType.QWEN
+        # Check if task involves images/vision (Mistral Small has vision capabilities)
+        if any(keyword in task_lower or keyword in context_lower for keyword in ["image", "picture", "photo", "visual", "vision", "analyze image"]):
+            return ModelType.MISTRAL  # Mistral Small supports vision
+        elif any(keyword in task_lower for keyword in ["code", "programming", "debug", "technical", "function", "algorithm"]):
+            return ModelType.QWEN  # Qwen3 Coder is specialized for coding
         else:
-            return ModelType.DEFAULT
+            return ModelType.DEFAULT  # DeepSeek Chat for general tasks
     
     async def generate_response(
         self,

@@ -15,9 +15,9 @@ class Settings(BaseSettings):
     openrouter_base_url: str = Field("https://openrouter.ai/api/v1", env="OPENROUTER_BASE_URL")
     
     # Model Configuration
-    default_model: str = Field("openai/gpt-3.5-turbo", env="DEFAULT_MODEL")
-    mistral_model: str = Field("mistralai/mistral-7b-instruct", env="MISTRAL_MODEL")
-    qwen_model: str = Field("qwen/qwen-2-7b-instruct", env="QWEN_MODEL")
+    default_model: str = Field("deepseek/deepseek-chat-v3-0324:free", env="DEFAULT_MODEL")
+    mistral_model: str = Field("mistralai/mistral-small-3.2-24b-instruct:free", env="MISTRAL_MODEL")
+    qwen_model: str = Field("qwen/qwen3-coder:free", env="QWEN_MODEL")
     
     # Database Configuration
     database_url: str = Field("sqlite:///./ai_assistant.db", env="DATABASE_URL")

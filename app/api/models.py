@@ -14,6 +14,7 @@ class ChatRequest(BaseModel):
     model_type: Optional[ModelType] = Field(None, description="Preferred model type")
     context: Dict[str, Any] = Field(default_factory=dict, description="Additional context")
     stream: bool = Field(False, description="Whether to stream the response")
+    images: Optional[List[str]] = Field(None, description="List of image URLs for vision tasks")
 
 
 class ChatResponse(BaseModel):

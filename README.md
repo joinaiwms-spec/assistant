@@ -35,9 +35,10 @@ A modular, intelligent backend platform for developers and power users, inspired
 
 ### 🌐 Multiple LLM Support
 - **OpenRouter Integration**: Access to multiple AI models via single API
-- **Model Selection**: Automatic model selection based on task type
-- **Fallback Support**: Graceful degradation when models are unavailable
-- **Cost Optimization**: Smart model routing to balance performance and cost
+- **Free Models**: DeepSeek Chat V3, Mistral Small 3.2 24B, Qwen3 Coder - all free tier
+- **Vision Capabilities**: Mistral Small supports image analysis and multimodal tasks
+- **Smart Model Selection**: Automatic routing based on task type (coding, vision, general)
+- **Cost Optimization**: Using free models for maximum value
 
 ## 🚀 Quick Start
 
@@ -179,9 +180,9 @@ User Request → AssistantAgent → Task Analysis → Agent Selection → Task E
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `OPENROUTER_API_KEY` | OpenRouter API key | Required |
-| `DEFAULT_MODEL` | Default chat model | `openai/gpt-3.5-turbo` |
-| `MISTRAL_MODEL` | Mistral model for code tasks | `mistralai/mistral-7b-instruct` |
-| `QWEN_MODEL` | Qwen model for creative tasks | `qwen/qwen-2-7b-instruct` |
+| `DEFAULT_MODEL` | Default chat model | `deepseek/deepseek-chat-v3-0324:free` |
+| `MISTRAL_MODEL` | Mistral model for vision tasks | `mistralai/mistral-small-3.2-24b-instruct:free` |
+| `QWEN_MODEL` | Qwen model for coding tasks | `qwen/qwen3-coder:free` |
 | `DATABASE_URL` | SQLite database path | `sqlite:///./ai_assistant.db` |
 | `VECTOR_DB_PATH` | Vector database path | `./vector_store` |
 | `MAX_MEMORY_SIZE` | Maximum memory entries | `10000` |
@@ -190,9 +191,11 @@ User Request → AssistantAgent → Task Analysis → Agent Selection → Task E
 ### Model Configuration
 
 The system automatically selects the best model for each task:
-- **Code tasks** → Mistral (better at programming)
-- **Creative tasks** → Qwen (better at writing/creativity)
-- **General tasks** → Default model (balanced performance)
+- **Vision tasks** → Mistral Small 3.2 24B (supports image analysis)
+- **Code tasks** → Qwen3 Coder (specialized for programming)
+- **General tasks** → DeepSeek Chat V3 (excellent for conversation and reasoning)
+
+All models are free tier on OpenRouter, providing excellent capabilities at no cost.
 
 ## 🧪 Usage Examples
 
@@ -227,6 +230,27 @@ response = requests.post("http://localhost:8000/agents/task", json={
     "agent_name": "CodeAgent",
     "task_description": "Create a Python function to calculate fibonacci numbers",
     "context": {"optimization": "recursive with memoization"}
+})
+```
+
+### Vision Analysis
+```python
+# Analyze a single image
+response = requests.post("http://localhost:8000/vision/analyze", json={
+    "image_url": "https://example.com/image.jpg",
+    "prompt": "What is in this image?",
+    "context": "Analyzing for accessibility features"
+})
+
+# Chat with images
+response = requests.post("http://localhost:8000/chat", json={
+    "message": "Describe what you see in this image",
+    "images": ["https://example.com/image.jpg"]
+})
+
+# Extract text from image (OCR)
+response = requests.post("http://localhost:8000/vision/extract-text", json={
+    "image_url": "https://example.com/document.jpg"
 })
 ```
 
