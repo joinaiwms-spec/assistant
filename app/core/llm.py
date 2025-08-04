@@ -203,7 +203,7 @@ class LLMManager:
     def __init__(self):
         self.client = OpenRouterClient()
         self._model_capabilities = {
-            ModelType.DEFAULT: {"good_for": ["general", "chat", "reasoning", "conversation", "vision", "multimodal"], "model": "OpenRouter Horizon Beta"},
+            ModelType.DEFAULT: {"good_for": ["general", "chat", "reasoning", "conversation", "vision", "multimodal"], "model": "OpenRouter Horizon Beta (openrouter/horizon-beta)"},
             ModelType.MISTRAL: {"good_for": ["vision", "image_analysis", "multimodal", "visual_tasks"], "model": "Mistral Small 3.2 24B"},
             ModelType.QWEN: {"good_for": ["code", "programming", "technical", "debugging", "algorithms"], "model": "Qwen3 Coder"},
         }

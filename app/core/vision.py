@@ -10,7 +10,7 @@ class VisionProcessor:
     """Process images and generate descriptions using vision-capable models."""
     
     def __init__(self):
-        self.vision_model = ModelType.DEFAULT  # Horizon Beta has excellent vision capabilities
+        self.vision_model = ModelType.DEFAULT  # openrouter/horizon-beta has excellent vision capabilities
     
     async def analyze_image(
         self, 

@@ -35,7 +35,7 @@ A modular, intelligent backend platform for developers and power users, inspired
 
 ### 🌐 Multiple LLM Support
 - **OpenRouter Integration**: Access to multiple AI models via single API
-- **Advanced Models**: OpenRouter Horizon Beta (default with vision), Mistral Small 3.2 24B, Qwen3 Coder
+- **Advanced Models**: OpenRouter Horizon Beta (openrouter/horizon-beta default with vision), Mistral Small 3.2 24B, Qwen3 Coder
 - **Vision Capabilities**: Horizon Beta and Mistral Small support image analysis and multimodal tasks
 - **Smart Model Selection**: Automatic routing based on task type (coding, vision, general)
 - **Optimized Performance**: Using high-quality models for best results
@@ -195,7 +195,7 @@ The system automatically selects the best model for each task:
 - **Code tasks** → Qwen3 Coder (specialized for programming)
 - **General tasks** → OpenRouter Horizon Beta (excellent for conversation and reasoning)
 
-Horizon Beta serves as the primary model with advanced vision and reasoning capabilities.
+OpenRouter Horizon Beta serves as the primary model with advanced vision and reasoning capabilities.
 
 ## 🧪 Usage Examples
 
